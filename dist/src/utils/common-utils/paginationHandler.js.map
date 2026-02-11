@@ -1,0 +1,1 @@
+{"version":3,"file":"paginationHandler.js","sourceRoot":"","sources":["../../../../src/utils/common-utils/paginationHandler.ts"],"names":[],"mappings":";;AAAA,8CAIC;AAJD,SAAgB,iBAAiB,CAAC,UAAkB,EAAE,QAAgB;IACpE,MAAM,IAAI,GAAG,CAAC,CAAC,UAAU,IAAI,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,QAAQ,IAAI,EAAE,CAAC,CAAC;IAExD,OAAO,IAAI,CAAC;AACd,CAAC"}
