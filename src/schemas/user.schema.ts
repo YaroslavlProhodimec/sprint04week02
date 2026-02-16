@@ -23,13 +23,13 @@ class AccountData {
 
 // Подтверждение email
 class EmailConfirmation {
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   confirmationCode: string | null;
 
   @Prop({ default: false })
   isConfirmed: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   expirationDate: Date | null;
 }
 
@@ -42,10 +42,10 @@ export class User {
   @Prop({ type: EmailConfirmation, _id: false, default: () => ({}) })
   emailConfirmation: EmailConfirmation;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   recoveryCode: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   recoveryCodeExpiration: Date | null;
 
   /** @deprecated используйте emailConfirmation.isConfirmed */

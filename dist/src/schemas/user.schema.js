@@ -44,7 +44,7 @@ class EmailConfirmation {
     expirationDate;
 }
 __decorate([
-    (0, mongoose_1.Prop)({ default: null }),
+    (0, mongoose_1.Prop)({ type: String, default: null }),
     __metadata("design:type", Object)
 ], EmailConfirmation.prototype, "confirmationCode", void 0);
 __decorate([
@@ -52,7 +52,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], EmailConfirmation.prototype, "isConfirmed", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: null }),
+    (0, mongoose_1.Prop)({ type: Date, default: null }),
     __metadata("design:type", Object)
 ], EmailConfirmation.prototype, "expirationDate", void 0);
 let User = class User {
@@ -72,11 +72,11 @@ __decorate([
     __metadata("design:type", EmailConfirmation)
 ], User.prototype, "emailConfirmation", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: null }),
+    (0, mongoose_1.Prop)({ type: String, default: null }),
     __metadata("design:type", Object)
 ], User.prototype, "recoveryCode", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: null }),
+    (0, mongoose_1.Prop)({ type: Date, default: null }),
     __metadata("design:type", Object)
 ], User.prototype, "recoveryCodeExpiration", void 0);
 __decorate([
