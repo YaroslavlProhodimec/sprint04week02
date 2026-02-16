@@ -16,6 +16,7 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const basic_auth_guard_1 = require("../auth/guards/basic-auth.guard");
+const create_user_dto_1 = require("./dto/create-user.dto");
 let UsersController = class UsersController {
     usersService;
     constructor(usersService) {
@@ -34,8 +35,8 @@ let UsersController = class UsersController {
         };
         return this.usersService.getAllUsers(sortData);
     }
-    async createUser(body) {
-        return this.usersService.createUser(body.login, body.email, body.password);
+    async createUser(dto) {
+        return this.usersService.createUser(dto.login, dto.email, dto.password);
     }
     async deleteUser(id) {
         const deleted = await this.usersService.deleteUser(id);
@@ -57,7 +58,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "createUser", null);
 __decorate([

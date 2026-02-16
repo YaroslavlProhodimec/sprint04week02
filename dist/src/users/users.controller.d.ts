@@ -1,4 +1,5 @@
 import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
@@ -14,10 +15,6 @@ export declare class UsersController {
             createdAt: Date;
         }[];
     }>;
-    createUser(body: {
-        login: string;
-        email: string;
-        password: string;
-    }): Promise<any>;
+    createUser(dto: CreateUserDto): Promise<any>;
     deleteUser(id: string): Promise<void>;
 }

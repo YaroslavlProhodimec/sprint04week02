@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import express from 'express';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 
 let cachedApp: any;
 
@@ -28,6 +28,13 @@ async function createApp() {
         transform: true,
         whitelist: true,
         forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => {
+          const errorsMessages = errors.map((e) => ({
+            message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
+            field: e.property,
+          }));
+          return new BadRequestException({ errorsMessages });
+        },
       })
     );
 

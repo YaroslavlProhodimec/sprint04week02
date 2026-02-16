@@ -23,6 +23,13 @@ async function createApp() {
             transform: true,
             whitelist: true,
             forbidNonWhitelisted: true,
+            exceptionFactory: (errors) => {
+                const errorsMessages = errors.map((e) => ({
+                    message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
+                    field: e.property,
+                }));
+                return new common_1.BadRequestException({ errorsMessages });
+            },
         }));
         expressApp.get('/', (req, res) => {
             res.json({

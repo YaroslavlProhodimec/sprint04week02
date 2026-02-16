@@ -8,7 +8,14 @@ async function bootstrap() {
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
         whitelist: true,
-        forbidNonWhitelisted: true
+        forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => {
+            const errorsMessages = errors.map((e) => ({
+                message: e.constraints ? Object.values(e.constraints)[0] : 'Validation failed',
+                field: e.property,
+            }));
+            return new common_1.BadRequestException({ errorsMessages });
+        },
     }));
     await app.listen(3001);
     console.log('🚀 Сервер запущен на http://localhost:3001');

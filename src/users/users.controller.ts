@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { BasicAuthGuard } from '../auth/guards/basic-auth.guard';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
@@ -37,8 +38,8 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createUser(@Body() body: { login: string; email: string; password: string }) {
-    return this.usersService.createUser(body.login, body.email, body.password);
+  async createUser(@Body() dto: CreateUserDto) {
+    return this.usersService.createUser(dto.login, dto.email, dto.password);
   }
 
   @Delete(':id')
