@@ -23,9 +23,10 @@ export class AuthService {
       this.usersService.findByLogin(login),
     ]);
     if (existingByLogin || existingByEmail) {
-      throw new BadRequestException({
-        errorsMessages: [{ message: 'User with this login or email already exists', field: 'login' }],
-      });
+      const errorsMessages: { message: string; field: string }[] = [];
+      if (existingByLogin) errorsMessages.push({ message: 'User with this login already exists', field: 'login' });
+      if (existingByEmail) errorsMessages.push({ message: 'User with this email already exists', field: 'email' });
+      throw new BadRequestException({ errorsMessages });
     }
 
     const confirmationCode = uuidv4();
