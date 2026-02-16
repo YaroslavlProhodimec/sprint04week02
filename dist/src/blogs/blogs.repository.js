@@ -39,22 +39,24 @@ let BlogsRepository = class BlogsRepository {
         this.postsRepository = postsRepository;
     }
     async getBlogs(sortData = {}) {
-        const { searchNameTerm, sortBy = 'createdAt', sortDirection = 'desc', pageNumber = 1, pageSize = 10 } = sortData;
+        const { searchNameTerm, sortBy = 'createdAt', sortDirection = 'desc', pageNumber = 1, pageSize = 10, } = sortData;
         const filter = searchNameTerm
             ? { name: { $regex: searchNameTerm, $options: 'i' } }
             : {};
+        const numPage = +pageNumber;
+        const numSize = +pageSize;
         const blogs = await this.blogModel
             .find(filter, { _id: 0 })
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
-            .skip((pageNumber - 1) * pageSize)
-            .limit(pageSize)
+            .skip((numPage - 1) * numSize)
+            .limit(numSize)
             .exec();
         const totalCount = await this.blogModel.countDocuments(filter);
-        const pagesCount = Math.ceil(totalCount / pageSize);
+        const pagesCount = Math.ceil(totalCount / numSize);
         return {
             pagesCount,
-            page: pageNumber,
-            pageSize,
+            page: numPage,
+            pageSize: numSize,
             totalCount,
             items: blogs.map((blog) => toBlogType(blog.toObject({ versionKey: false }))),
         };
@@ -73,40 +75,25 @@ let BlogsRepository = class BlogsRepository {
             id: (0, uuid_1.v4)(),
             ...createBlogDto,
             createdAt: new Date().toISOString(),
-            isMembership: false
+            isMembership: false,
         };
         const newBlog = new this.blogModel(blogData);
         await newBlog.save();
-        const blogObj = newBlog.toObject({ versionKey: false });
+        const blogObj = newBlog.toObject({
+            versionKey: false,
+        });
         return toBlogType(blogObj);
     }
     async updateBlog(id, updateBlogDto) {
-        const result = await this.blogModel
-            .updateOne({ id }, updateBlogDto)
-            .exec();
+        const result = await this.blogModel.updateOne({ id }, updateBlogDto).exec();
         return result.matchedCount === 1;
     }
     async deleteBlog(id) {
-        const result = await this.blogModel
-            .deleteOne({ id })
-            .exec();
+        const result = await this.blogModel.deleteOne({ id }).exec();
         return result.deletedCount === 1;
     }
-    async findBlogForPost(blogId) {
-        return this.getBlogById(blogId);
-    }
     async getPostsByBlogId(blogId, sortData, userId) {
-        return this.postsRepository.getPostsByBlogId(blogId, sortData, userId);
-    }
-    async createPostForBlog(blogId, postData) {
-        const blog = await this.getBlogById(blogId);
-        return {
-            id: (0, uuid_1.v4)(),
-            ...postData,
-            blogId: blogId,
-            blogName: blog?.name || '',
-            createdAt: new Date().toISOString()
-        };
+        return this.postsRepository.getBlogPosts(blogId, sortData, userId);
     }
 };
 exports.BlogsRepository = BlogsRepository;

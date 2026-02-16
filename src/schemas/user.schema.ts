@@ -21,12 +21,34 @@ class AccountData {
   createdAt: Date;
 }
 
+// Подтверждение email
+class EmailConfirmation {
+  @Prop({ default: null })
+  confirmationCode: string | null;
+
+  @Prop({ default: false })
+  isConfirmed: boolean;
+
+  @Prop({ default: null })
+  expirationDate: Date | null;
+}
+
 // Основная схема пользователя
 @Schema()
 export class User {
   @Prop({ type: AccountData, _id: false })
   accountData: AccountData;
 
+  @Prop({ type: EmailConfirmation, _id: false, default: () => ({}) })
+  emailConfirmation: EmailConfirmation;
+
+  @Prop({ default: null })
+  recoveryCode: string | null;
+
+  @Prop({ default: null })
+  recoveryCodeExpiration: Date | null;
+
+  /** @deprecated используйте emailConfirmation.isConfirmed */
   @Prop({ default: false })
   isConfirmed: boolean;
 }

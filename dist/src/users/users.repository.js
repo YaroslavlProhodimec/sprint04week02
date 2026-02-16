@@ -81,18 +81,27 @@ let UsersRepository = class UsersRepository {
             });
         }
         const filter = searchFilters.length > 0 ? { $or: searchFilters } : {};
+        const sortByField = sortBy === 'login'
+            ? 'accountData.login'
+            : sortBy === 'email'
+                ? 'accountData.email'
+                : sortBy === 'createdAt'
+                    ? 'accountData.createdAt'
+                    : sortBy;
+        const numPage = +pageNumber;
+        const numSize = +pageSize;
         const users = await this.userModel
             .find(filter)
-            .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
-            .skip((pageNumber - 1) * pageSize)
-            .limit(pageSize)
+            .sort({ [sortByField]: sortDirection === 'desc' ? -1 : 1 })
+            .skip((numPage - 1) * numSize)
+            .limit(numSize)
             .exec();
         const totalCount = await this.userModel.countDocuments(filter);
-        const pageCount = Math.ceil(totalCount / pageSize);
+        const pageCount = Math.ceil(totalCount / numSize);
         return {
             pagesCount: pageCount,
-            page: pageNumber,
-            pageSize,
+            page: numPage,
+            pageSize: numSize,
             totalCount,
             items: users.map(user => ({
                 id: user._id.toString(),
@@ -141,6 +150,96 @@ let UsersRepository = class UsersRepository {
         catch {
             return null;
         }
+    }
+    async findById(id) {
+        try {
+            if (!id?.match?.(/^[0-9a-fA-F]{24}$/))
+                return null;
+            return this.userModel.findById(id).exec();
+        }
+        catch {
+            return null;
+        }
+    }
+    async findByEmail(email) {
+        return this.userModel.findOne({ 'accountData.email': email }).exec();
+    }
+    async findByLogin(login) {
+        return this.userModel.findOne({ 'accountData.login': login }).exec();
+    }
+    async findByConfirmationCode(code) {
+        return this.userModel.findOne({ 'emailConfirmation.confirmationCode': code }).exec();
+    }
+    async findByRecoveryCode(recoveryCode) {
+        return this.userModel.findOne({ recoveryCode }).exec();
+    }
+    async createForRegistration(login, email, passwordHash, confirmationCode, expirationDate) {
+        const passwordSalt = await bcrypt.genSalt(10);
+        const userData = {
+            accountData: {
+                login,
+                email,
+                passwordHash,
+                passwordSalt,
+                createdAt: new Date(),
+            },
+            emailConfirmation: {
+                confirmationCode,
+                isConfirmed: false,
+                expirationDate,
+            },
+            recoveryCode: null,
+            recoveryCodeExpiration: null,
+        };
+        const newUser = new this.userModel(userData);
+        return newUser.save();
+    }
+    async confirmUser(userId) {
+        const id = typeof userId === 'string' ? userId : userId?.toString?.();
+        return this.userModel
+            .findByIdAndUpdate(id, {
+            $set: {
+                'emailConfirmation.isConfirmed': true,
+                'emailConfirmation.confirmationCode': null,
+                'emailConfirmation.expirationDate': null,
+            },
+        }, { new: true })
+            .exec();
+    }
+    async updateConfirmationCode(userId, confirmationCode, expirationDate) {
+        const result = await this.userModel
+            .updateOne({ _id: userId }, {
+            $set: {
+                'emailConfirmation.confirmationCode': confirmationCode,
+                'emailConfirmation.expirationDate': expirationDate,
+                'emailConfirmation.isConfirmed': false,
+            },
+        })
+            .exec();
+        return (result.modifiedCount ?? 0) >= 1;
+    }
+    async setRecoveryCode(userId, recoveryCode, expirationDate) {
+        const result = await this.userModel
+            .updateOne({ _id: userId }, { $set: { recoveryCode, recoveryCodeExpiration: expirationDate } })
+            .exec();
+        return (result.modifiedCount ?? 0) >= 1;
+    }
+    async setNewPassword(userId, passwordHash) {
+        const passwordSalt = await bcrypt.genSalt(10);
+        const result = await this.userModel
+            .updateOne({ _id: userId }, {
+            $set: {
+                'accountData.passwordHash': passwordHash,
+                'accountData.passwordSalt': passwordSalt,
+                recoveryCode: null,
+                recoveryCodeExpiration: null,
+            },
+        })
+            .exec();
+        return (result.modifiedCount ?? 0) >= 1;
+    }
+    async deleteById(id) {
+        return this.deleteUser(id);
     }
 };
 exports.UsersRepository = UsersRepository;

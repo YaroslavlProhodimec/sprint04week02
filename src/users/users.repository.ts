@@ -133,6 +133,136 @@ export class UsersRepository {
     }
   }
 
+  // --- Auth-методы (работа с User для аутентификации) ---
+
+  async findById(id: string): Promise<UserDocument | null> {
+    try {
+      if (!id?.match?.(/^[0-9a-fA-F]{24}$/)) return null;
+      return this.userModel.findById(id).exec();
+    } catch {
+      return null;
+    }
+  }
+
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ 'accountData.email': email }).exec();
+  }
+
+  async findByLogin(login: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ 'accountData.login': login }).exec();
+  }
+
+  async findByConfirmationCode(code: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ 'emailConfirmation.confirmationCode': code }).exec();
+  }
+
+  async findByRecoveryCode(recoveryCode: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ recoveryCode }).exec();
+  }
+
+  async createForRegistration(
+    login: string,
+    email: string,
+    password: string,
+    confirmationCode: string,
+    expirationDate: Date,
+  ): Promise<UserDocument> {
+    const passwordSalt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, passwordSalt);
+    const userData = {
+      accountData: {
+        login,
+        email,
+        passwordHash,
+        passwordSalt,
+        createdAt: new Date(),
+      },
+      emailConfirmation: {
+        confirmationCode,
+        isConfirmed: false,
+        expirationDate,
+      },
+      recoveryCode: null,
+      recoveryCodeExpiration: null,
+    };
+    const newUser = new this.userModel(userData);
+    return newUser.save();
+  }
+
+  async confirmUser(userId: any): Promise<UserDocument | null> {
+    const id = typeof userId === 'string' ? userId : userId?.toString?.();
+    return this.userModel
+      .findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            'emailConfirmation.isConfirmed': true,
+            'emailConfirmation.confirmationCode': null,
+            'emailConfirmation.expirationDate': null,
+          },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async updateConfirmationCode(
+    userId: string,
+    confirmationCode: string,
+    expirationDate: Date,
+  ): Promise<boolean> {
+    const result = await this.userModel
+      .updateOne(
+        { _id: userId },
+        {
+          $set: {
+            'emailConfirmation.confirmationCode': confirmationCode,
+            'emailConfirmation.expirationDate': expirationDate,
+            'emailConfirmation.isConfirmed': false,
+          },
+        },
+      )
+      .exec();
+    return (result.modifiedCount ?? 0) >= 1;
+  }
+
+  async setRecoveryCode(
+    userId: string,
+    recoveryCode: string,
+    expirationDate: Date,
+  ): Promise<boolean> {
+    const result = await this.userModel
+      .updateOne(
+        { _id: userId },
+        { $set: { recoveryCode, recoveryCodeExpiration: expirationDate } },
+      )
+      .exec();
+    return (result.modifiedCount ?? 0) >= 1;
+  }
+
+  async setNewPassword(userId: string, newPassword: string): Promise<boolean> {
+    const passwordSalt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, passwordSalt);
+    const result = await this.userModel
+      .updateOne(
+        { _id: userId },
+        {
+          $set: {
+            'accountData.passwordHash': passwordHash,
+            'accountData.passwordSalt': passwordSalt,
+            recoveryCode: null,
+            recoveryCodeExpiration: null,
+          },
+        },
+      )
+      .exec();
+    return (result.modifiedCount ?? 0) >= 1;
+  }
+
+  async deleteById(id: string): Promise<boolean> {
+    return this.deleteUser(id);
+  }
+
   // Найти пользователя по ID
   // async findById(id: string): Promise<UserDocument | null> {
   //   if (!id.match(/^[0-9a-fA-F]{24}$/)) {  // ⚠️ Добавил проверку ObjectId

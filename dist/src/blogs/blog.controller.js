@@ -57,14 +57,15 @@ let BlogsController = class BlogsController {
             throw new common_1.NotFoundException(`Blog with ID ${id} not found`);
         }
     }
-    async getBlogPosts(blogId, query) {
+    async getBlogPosts(id, query, req) {
         const sortData = {
             sortBy: query.sortBy,
             sortDirection: query.sortDirection,
             pageNumber: query.pageNumber,
             pageSize: query.pageSize,
         };
-        const posts = await this.blogsService.getPostsByBlogId(blogId, sortData);
+        const userId = req.userId ?? undefined;
+        const posts = await this.blogsService.getPostsByBlogId(id, sortData, userId);
         if (!posts || posts.items.length < 1) {
             throw new common_1.NotFoundException('Posts not found');
         }
@@ -123,8 +124,9 @@ __decorate([
     (0, common_1.Get)(':id/posts'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], BlogsController.prototype, "getBlogPosts", null);
 __decorate([

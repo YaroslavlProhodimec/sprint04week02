@@ -7,8 +7,16 @@ declare class AccountData {
     email: string;
     createdAt: Date;
 }
+declare class EmailConfirmation {
+    confirmationCode: string | null;
+    isConfirmed: boolean;
+    expirationDate: Date | null;
+}
 export declare class User {
     accountData: AccountData;
+    emailConfirmation: EmailConfirmation;
+    recoveryCode: string | null;
+    recoveryCodeExpiration: Date | null;
     isConfirmed: boolean;
 }
 export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User, any> & User & {

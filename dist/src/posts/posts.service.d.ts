@@ -6,8 +6,8 @@ export declare class PostsService {
     constructor(postsRepository: PostsRepository);
     getAllPosts(query: any, userId?: string): Promise<{
         pagesCount: number;
-        page: any;
-        pageSize: any;
+        page: number;
+        pageSize: number;
         totalCount: number;
         items: {
             id: any;
@@ -35,8 +35,8 @@ export declare class PostsService {
     deletePost(id: string): Promise<boolean>;
     getBlogPosts(blogId: string, query: any, userId?: string): Promise<{
         pagesCount: number;
-        page: any;
-        pageSize: any;
+        page: number;
+        pageSize: number;
         totalCount: number;
         items: {
             id: any;

@@ -6,8 +6,8 @@ export declare class PostsController {
     constructor(postsService: PostsService);
     getPosts(query: any): Promise<{
         pagesCount: number;
-        page: any;
-        pageSize: any;
+        page: number;
+        pageSize: number;
         totalCount: number;
         items: {
             id: any;

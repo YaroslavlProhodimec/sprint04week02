@@ -1,42 +1,133 @@
-// src/blogs/blogs.service.ts
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { BlogsRepository } from './blogs.repository';
-import { CreateBlogDto, SortDataType, UpdateBlogDto } from '../types/blog/input';
-import { PostsRepository } from '../posts/posts.repository';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { add } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { EmailService } from '../common/email/email.service';
+import { UsersService } from '../users/users.service';
+import type { UserDocument } from '../schemas/user.schema';
+
+function toUserId(user: UserDocument): string {
+  return String((user as any)._id);
+}
 
 @Injectable()
-export class BlogsService {
+export class AuthService {
   constructor(
-    private readonly blogsRepository: BlogsRepository,
-    @Inject(forwardRef(() => PostsRepository))
-    private readonly postsRepository: PostsRepository
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
-  async getAllBlogs(sortData: SortDataType) {
-    return this.blogsRepository.getBlogs(sortData);
+  async register(login: string, email: string, password: string) {
+    const [existingByEmail, existingByLogin] = await Promise.all([
+      this.usersService.findByEmail(email),
+      this.usersService.findByLogin(login),
+    ]);
+    if (existingByLogin || existingByEmail) {
+      throw new BadRequestException({
+        errorsMessages: [{ message: 'User with this login or email already exists', field: 'login' }],
+      });
+    }
+
+    const confirmationCode = uuidv4();
+    const expirationDate = add(new Date(), { hours: 3, minutes: 3 });
+
+    const created = await this.usersService.createForRegistration(
+      login,
+      email,
+      password,
+      confirmationCode,
+      expirationDate,
+    );
+
+    try {
+      await this.emailService.sendConfirmationEmail(email, confirmationCode);
+    } catch (e) {
+      await this.usersService.deleteById(toUserId(created));
+      throw new BadRequestException({ errorsMessages: [{ message: 'Registration failed', field: 'email' }] });
+    }
+  }
+    // emailConfirmation: {
+    //     confirmationCode,
+    //     isConfirmed: false,
+    //     expirationDate,
+    // },
+  async confirmCode(code: string): Promise<void> {
+    const user = await this.usersService.findByConfirmationCode(code);
+    const emailConf = user?.emailConfirmation;
+    if (!user || !emailConf || emailConf.confirmationCode !== code) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Incorrect confirmation code', field: 'code' }] });
+    }
+    if (emailConf.isConfirmed) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'User is already confirmed', field: 'code' }] });
+    }
+    if (emailConf.expirationDate && new Date(emailConf.expirationDate) < new Date()) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Confirmation code expired', field: 'code' }] });
+    }
+    const updated = await this.usersService.confirmUser(toUserId(user));
+    if (!updated) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Update failed', field: 'code' }] });
+    }
   }
 
-  async getBlogById(id: string) {
-    return this.blogsRepository.getBlogById(id);
+  async resendEmail(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Wrong email', field: 'email' }] });
+    }
+    const isConfirmed = user.emailConfirmation?.isConfirmed ?? user.isConfirmed ?? false;
+    if (isConfirmed) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Email already confirmed', field: 'email' }] });
+    }
+    const newCode = uuidv4();
+    const newExpirationDate = add(new Date(), { hours: 3, minutes: 3 });
+    await this.usersService.updateConfirmationCode(toUserId(user), newCode, newExpirationDate);
+    await this.emailService.sendConfirmationEmail(user.accountData.email, newCode);
   }
 
-  async createBlog(createBlogDto: CreateBlogDto) {
-    return this.blogsRepository.createBlog(createBlogDto);
+  async login(loginOrEmail: string, password: string): Promise<{ accessToken: string }> {
+    const user = await this.usersService.checkCredentials(loginOrEmail, password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const accessToken = this.jwtService.sign(
+      { userId: toUserId(user) },
+      { secret: process.env.ACCESS_TOKEN_SECRET || 'access-secret', expiresIn: '60s' },
+    );
+    return { accessToken };
   }
 
-  async updateBlog(id: string, updateBlogDto: UpdateBlogDto) {
-    return this.blogsRepository.updateBlog(id, updateBlogDto);
+  async getMe(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) return null;
+    return {
+      email: user.accountData.email,
+      login: user.accountData.login,
+      userId: toUserId(user),
+    };
   }
 
-  async deleteBlog(id: string) {
-    return this.blogsRepository.deleteBlog(id);
+  async passwordRecovery(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      const recoveryCode = uuidv4();
+      const expirationDate = add(new Date(), { hours: 24 });
+      await this.usersService.setRecoveryCode(toUserId(user), recoveryCode, expirationDate);
+      const link = `https://somesite.com/password-recovery?recoveryCode=${recoveryCode}`;
+      await this.emailService.sendPasswordRecoveryEmail(email, link);
+    }
+    // Always 204
   }
 
-  async getPostsByBlogId(blogId: string, sortData: any, userId?: string) {
-    return this.blogsRepository.getPostsByBlogId(blogId, sortData, userId);
+  async newPassword(recoveryCode: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByRecoveryCode(recoveryCode);
+    if (!user) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code is incorrect', field: 'recoveryCode' }] });
+    }
+    if (user.recoveryCodeExpiration && new Date(user.recoveryCodeExpiration) < new Date()) {
+      throw new BadRequestException({ errorsMessages: [{ message: 'Recovery code expired', field: 'recoveryCode' }] });
+    }
+    await this.usersService.setNewPassword(toUserId(user), newPassword);
   }
 
-  async createPostForBlog(blogId: string, postData: any) {
-    return this.postsRepository.createPostForBlog(blogId, postData);
-  }
 }

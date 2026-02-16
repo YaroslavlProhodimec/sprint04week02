@@ -38,8 +38,28 @@ __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], AccountData.prototype, "createdAt", void 0);
+class EmailConfirmation {
+    confirmationCode;
+    isConfirmed;
+    expirationDate;
+}
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Object)
+], EmailConfirmation.prototype, "confirmationCode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], EmailConfirmation.prototype, "isConfirmed", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Object)
+], EmailConfirmation.prototype, "expirationDate", void 0);
 let User = class User {
     accountData;
+    emailConfirmation;
+    recoveryCode;
+    recoveryCodeExpiration;
     isConfirmed;
 };
 exports.User = User;
@@ -47,6 +67,18 @@ __decorate([
     (0, mongoose_1.Prop)({ type: AccountData, _id: false }),
     __metadata("design:type", AccountData)
 ], User.prototype, "accountData", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: EmailConfirmation, _id: false, default: () => ({}) }),
+    __metadata("design:type", EmailConfirmation)
+], User.prototype, "emailConfirmation", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Object)
+], User.prototype, "recoveryCode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Object)
+], User.prototype, "recoveryCodeExpiration", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)

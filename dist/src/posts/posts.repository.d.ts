@@ -14,8 +14,8 @@ export declare class PostsRepository {
     private getMapperDeps;
     getPosts(query?: any, userId?: string): Promise<{
         pagesCount: number;
-        page: any;
-        pageSize: any;
+        page: number;
+        pageSize: number;
         totalCount: number;
         items: {
             id: any;
@@ -43,8 +43,8 @@ export declare class PostsRepository {
     deletePost(id: string): Promise<boolean>;
     getBlogPosts(blogId: string, query: any, userId?: string): Promise<{
         pagesCount: number;
-        page: any;
-        pageSize: any;
+        page: number;
+        pageSize: number;
         totalCount: number;
         items: {
             id: any;

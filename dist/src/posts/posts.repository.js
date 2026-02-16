@@ -56,8 +56,8 @@ let PostsRepository = class PostsRepository {
         }));
         return {
             pagesCount,
-            page: pageNumber,
-            pageSize,
+            page: +pageNumber,
+            pageSize: +pageSize,
             totalCount,
             items,
         };
@@ -80,22 +80,17 @@ let PostsRepository = class PostsRepository {
             id: (0, uuid_1.v4)(),
             ...createPostDto,
             blogName: blog.name,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
         };
         const newPost = new this.postModel(postData);
         await newPost.save();
-        const postObj = newPost.toObject({ versionKey: false });
-        const result = { ...postObj };
-        if (result._id) {
-            delete result._id;
-        }
-        return {
-            ...result,
-            createdAt: result.createdAt instanceof Date ? result.createdAt.toISOString() : result.createdAt
-        };
+        const postObj = newPost.toObject({
+            versionKey: false,
+        });
+        return (0, mapper_1.postMapper)(postObj, undefined, this.getMapperDeps());
     }
     async updatePost(id, updatePostDto) {
-        let updateData = { ...updatePostDto };
+        const updateData = { ...updatePostDto };
         if (updatePostDto.blogId) {
             const blog = await this.blogsRepository.getBlogById(updatePostDto.blogId);
             if (!blog) {
@@ -131,8 +126,8 @@ let PostsRepository = class PostsRepository {
         }));
         return {
             pagesCount,
-            page: pageNumber,
-            pageSize,
+            page: +pageNumber,
+            pageSize: +pageSize,
             totalCount,
             items,
         };
