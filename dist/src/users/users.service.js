@@ -75,8 +75,8 @@ let UsersService = class UsersService {
     async findByRecoveryCode(recoveryCode) {
         return this.usersRepository.findByRecoveryCode(recoveryCode);
     }
-    async createForRegistration(login, email, passwordHash, confirmationCode, expirationDate) {
-        return this.usersRepository.createForRegistration(login, email, passwordHash, confirmationCode, expirationDate);
+    async createForRegistration(login, email, password, confirmationCode, expirationDate) {
+        return this.usersRepository.createForRegistration(login, email, password, confirmationCode, expirationDate);
     }
     async confirmUser(userId) {
         return this.usersRepository.confirmUser(userId);
@@ -87,8 +87,8 @@ let UsersService = class UsersService {
     async setRecoveryCode(userId, recoveryCode, expirationDate) {
         return this.usersRepository.setRecoveryCode(userId, recoveryCode, expirationDate);
     }
-    async setNewPassword(userId, passwordHash) {
-        return this.usersRepository.setNewPassword(userId, passwordHash);
+    async setNewPassword(userId, newPassword) {
+        return this.usersRepository.setNewPassword(userId, newPassword);
     }
     async deleteById(id) {
         return this.usersRepository.deleteById(id);

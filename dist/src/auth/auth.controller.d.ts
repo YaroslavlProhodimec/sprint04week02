@@ -17,7 +17,7 @@ export declare class AuthController {
     me(userId: string): Promise<{
         email: string;
         login: string;
-        userId: any;
+        userId: string;
     }>;
     passwordRecovery(dto: PasswordRecoveryDto): Promise<void>;
     newPassword(dto: NewPasswordDto): Promise<void>;

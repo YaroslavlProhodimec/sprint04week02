@@ -173,8 +173,9 @@ let UsersRepository = class UsersRepository {
     async findByRecoveryCode(recoveryCode) {
         return this.userModel.findOne({ recoveryCode }).exec();
     }
-    async createForRegistration(login, email, passwordHash, confirmationCode, expirationDate) {
+    async createForRegistration(login, email, password, confirmationCode, expirationDate) {
         const passwordSalt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, passwordSalt);
         const userData = {
             accountData: {
                 login,
@@ -224,8 +225,9 @@ let UsersRepository = class UsersRepository {
             .exec();
         return (result.modifiedCount ?? 0) >= 1;
     }
-    async setNewPassword(userId, passwordHash) {
+    async setNewPassword(userId, newPassword) {
         const passwordSalt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, passwordSalt);
         const result = await this.userModel
             .updateOne({ _id: userId }, {
             $set: {

@@ -22,11 +22,11 @@ export declare class UsersService {
     findByLogin(login: string): Promise<UserDocument | null>;
     findByConfirmationCode(code: string): Promise<UserDocument | null>;
     findByRecoveryCode(recoveryCode: string): Promise<UserDocument | null>;
-    createForRegistration(login: string, email: string, passwordHash: string, confirmationCode: string, expirationDate: Date): Promise<UserDocument>;
+    createForRegistration(login: string, email: string, password: string, confirmationCode: string, expirationDate: Date): Promise<UserDocument>;
     confirmUser(userId: any): Promise<UserDocument | null>;
     updateConfirmationCode(userId: string, confirmationCode: string, expirationDate: Date): Promise<boolean>;
     setRecoveryCode(userId: string, recoveryCode: string, expirationDate: Date): Promise<boolean>;
-    setNewPassword(userId: string, passwordHash: string): Promise<boolean>;
+    setNewPassword(userId: string, newPassword: string): Promise<boolean>;
     deleteById(id: string): Promise<boolean>;
     checkCredentials(loginOrEmail: string, password: string): Promise<UserDocument | null>;
 }

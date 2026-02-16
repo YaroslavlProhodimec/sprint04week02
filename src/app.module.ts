@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { BlogsModule } from './blogs/blogs.module';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { TestingModule } from './testing/testing.module';
 import { setBlogsRepository } from './repositories/blog-repository';
@@ -19,6 +20,7 @@ import { BlogsRepository } from './blogs/blogs.repository';
     DatabaseModule,
     BlogsModule,
     UsersModule,
+    AuthModule,
     PostsModule,
     TestingModule,
   ],

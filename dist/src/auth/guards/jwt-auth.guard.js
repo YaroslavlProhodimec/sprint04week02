@@ -8,13 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JwtAuthGuard = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
-let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
-    handleRequest(err, user) {
-        if (err || !user) {
-            throw err || new common_1.UnauthorizedException();
+const jwt_service_1 = require("../../application/jwt-service");
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+let JwtAuthGuard = class JwtAuthGuard {
+    async canActivate(context) {
+        const request = context.switchToHttp().getRequest();
+        const authHeader = request.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new common_1.UnauthorizedException();
         }
-        return user;
+        const token = authHeader.slice(7);
+        const payload = await jwt_service_1.jwtService.getJwtPayloadResult(token, ACCESS_TOKEN_SECRET);
+        if (!payload?.userId) {
+            throw new common_1.UnauthorizedException();
+        }
+        request.user = { userId: payload.userId };
+        return true;
     }
 };
 exports.JwtAuthGuard = JwtAuthGuard;

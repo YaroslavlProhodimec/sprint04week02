@@ -15,6 +15,7 @@ const config_1 = require("@nestjs/config");
 const database_module_1 = require("./database/database.module");
 const blogs_module_1 = require("./blogs/blogs.module");
 const users_module_1 = require("./users/users.module");
+const auth_module_1 = require("./auth/auth.module");
 const posts_module_1 = require("./posts/posts.module");
 const testing_module_1 = require("./testing/testing.module");
 const blog_repository_1 = require("./repositories/blog-repository");
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             database_module_1.DatabaseModule,
             blogs_module_1.BlogsModule,
             users_module_1.UsersModule,
+            auth_module_1.AuthModule,
             posts_module_1.PostsModule,
             testing_module_1.TestingModule,
         ],

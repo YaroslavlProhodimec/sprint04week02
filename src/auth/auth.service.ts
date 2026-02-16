@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { jwtService } from '../application/jwt-service';
 import { add } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '../common/email/email.service';
@@ -14,7 +14,6 @@ function toUserId(user: UserDocument): string {
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
     private emailService: EmailService,
   ) {}
 
@@ -47,11 +46,7 @@ export class AuthService {
       throw new BadRequestException({ errorsMessages: [{ message: 'Registration failed', field: 'email' }] });
     }
   }
-    // emailConfirmation: {
-    //     confirmationCode,
-    //     isConfirmed: false,
-    //     expirationDate,
-    // },
+
   async confirmCode(code: string): Promise<void> {
     const user = await this.usersService.findByConfirmationCode(code);
     const emailConf = user?.emailConfirmation;
@@ -90,9 +85,11 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const accessToken = this.jwtService.sign(
+    const secret = process.env.ACCESS_TOKEN_SECRET || 'access-secret';
+    const accessToken = await jwtService.createJWT(
       { userId: toUserId(user) },
-      { secret: process.env.ACCESS_TOKEN_SECRET || 'access-secret', expiresIn: '60s' },
+      secret,
+      300, // 5 минут в секундах
     );
     return { accessToken };
   }
@@ -107,7 +104,7 @@ export class AuthService {
     };
   }
 
-  async passwordRecovery(email: string): Promise<void> {
+  async  passwordRecovery(email: string): Promise<void> {
     const user = await this.usersService.findByEmail(email);
     if (user) {
       const recoveryCode = uuidv4();

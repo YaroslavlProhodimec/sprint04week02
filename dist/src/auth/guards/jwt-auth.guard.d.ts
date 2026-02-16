@@ -1,5 +1,4 @@
-declare const JwtAuthGuard_base: any;
-export declare class JwtAuthGuard extends JwtAuthGuard_base {
-    handleRequest(err: any, user: any): any;
+import { CanActivate, ExecutionContext } from '@nestjs/common';
+export declare class JwtAuthGuard implements CanActivate {
+    canActivate(context: ExecutionContext): Promise<boolean>;
 }
-export {};

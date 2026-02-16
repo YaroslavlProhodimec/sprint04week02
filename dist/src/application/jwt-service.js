@@ -15,12 +15,6 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var __importStar = (this && this.__importStar) || (function () {
     var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
@@ -39,38 +33,32 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.jwtService = exports.JwtService = void 0;
-const common_1 = require("@nestjs/common");
-const jwt = __importStar(require("jsonwebtoken"));
-let JwtService = class JwtService {
+exports.jwtService = void 0;
+const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
+exports.jwtService = {
     async createJWT(payload, secret, expiresIn) {
         return new Promise((resolve, reject) => {
-            jwt.sign(payload, secret, { expiresIn: `${expiresIn}m` }, (err, token) => {
-                if (err) {
+            jsonwebtoken_1.default.sign({ ...payload }, secret, { expiresIn }, (err, token) => {
+                if (err)
                     reject(err);
-                }
-                else {
+                else
                     resolve(token);
-                }
             });
         });
-    }
-    async verifyJWT(token, secret) {
-        return new Promise((resolve, reject) => {
-            jwt.verify(token, secret, (err, decoded) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(decoded);
-                }
-            });
-        });
-    }
+    },
+    async getJwtPayloadResult(token, secret) {
+        try {
+            const result = jsonwebtoken_1.default.verify(token, secret);
+            return result;
+        }
+        catch (error) {
+            if (error instanceof jsonwebtoken_1.TokenExpiredError ||
+                error instanceof jsonwebtoken_1.JsonWebTokenError ||
+                error instanceof jsonwebtoken_1.NotBeforeError) {
+                return null;
+            }
+            return null;
+        }
+    },
 };
-exports.JwtService = JwtService;
-exports.JwtService = JwtService = __decorate([
-    (0, common_1.Injectable)()
-], JwtService);
-exports.jwtService = new JwtService();
 //# sourceMappingURL=jwt-service.js.map

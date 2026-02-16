@@ -1,32 +1,50 @@
-// src/application/jwt-service.ts
-import { Injectable } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import jwt, {
+  JsonWebTokenError,
+  NotBeforeError,
+  TokenExpiredError,
+} from 'jsonwebtoken';
+import { JwtPayloadResult } from '../dto/common/jwt/JwtPayloadResult';
 
-@Injectable()
-export class JwtService {
-  async createJWT(payload: any, secret: string, expiresIn: number): Promise<string> {
+type JwtPayload = {
+  userId: string;
+  deviceId?: string;
+};
+
+export const jwtService = {
+  async createJWT(
+    payload: JwtPayload,
+    secret: string,
+    expiresIn: number, // секунды
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
-      jwt.sign(payload, secret, { expiresIn: `${expiresIn}m` }, (err, token) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(token as string);
-        }
-      });
+      jwt.sign(
+        { ...payload },
+        secret,
+        { expiresIn },
+        (err: Error | null, token?: string) => {
+          if (err) reject(err);
+          else resolve(token!);
+        },
+      );
     });
-  }
+  },
 
-  async verifyJWT(token: string, secret: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      jwt.verify(token, secret, (err, decoded) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(decoded);
-        }
-      });
-    });
-  }
-}
-
-export const jwtService = new JwtService();
+  async getJwtPayloadResult(
+    token: string,
+    secret: string,
+  ): Promise<JwtPayloadResult | null> {
+    try {
+      const result = jwt.verify(token, secret);
+      return result as JwtPayloadResult;
+    } catch (error) {
+      if (
+        error instanceof TokenExpiredError ||
+        error instanceof JsonWebTokenError ||
+        error instanceof NotBeforeError
+      ) {
+        return null;
+      }
+      return null;
+    }
+  },
+};
