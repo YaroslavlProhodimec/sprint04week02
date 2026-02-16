@@ -85,7 +85,7 @@ export class UsersRepository {
     };
   }
 
-  // Создать нового пользователя
+  // Создать нового пользователя (админ) — пользователь может сразу логиниться
   async createUser(login: string, email: string, password: string): Promise<any> {
     const passwordSalt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, passwordSalt);
@@ -98,7 +98,12 @@ export class UsersRepository {
         passwordSalt,
         createdAt: new Date()
       },
-      isConfirmed: false
+      emailConfirmation: {
+        confirmationCode: null,
+        isConfirmed: true,
+        expirationDate: null,
+      },
+      isConfirmed: true,
     };
 
     const newUser = new this.userModel(userData);
